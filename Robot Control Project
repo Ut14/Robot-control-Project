@@ -1,0 +1,57 @@
+#include <ros/ros.h>
+#include <geometry_msgs/Twist.h>
+
+class RobotController {
+public:
+    RobotController() {
+        // Initialize ROS node
+        ros::NodeHandle nh;
+
+        // Subscribe to the velocity command topic
+        vel_subscriber = nh.subscribe("cmd_vel", 10, &RobotController::velocityCallback, this);
+
+        // Simulated robot state
+        robot_pose_x = 0.0;
+        robot_pose_y = 0.0;
+
+        // Timer for simulation loop
+        timer = nh.createTimer(ros::Duration(0.1), &RobotController::simulationLoop, this);
+    }
+
+    // Callback function for velocity commands
+    void velocityCallback(const geometry_msgs::Twist::ConstPtr& msg) {
+        linear_vel_x = msg->linear.x;
+        angular_vel_z = msg->angular.z;
+    }
+
+    // Simulation loop
+    void simulationLoop(const ros::TimerEvent& event) {
+        // Simulate robot motion
+        robot_pose_x += linear_vel_x * 0.1;  // Assuming a time step of 0.1 seconds
+        robot_pose_y += angular_vel_z * 0.1;
+
+        // Print robot state
+        ROS_INFO("Robot Pose: X = %f, Y = %f", robot_pose_x, robot_pose_y);
+    }
+
+private:
+    ros::Subscriber vel_subscriber;
+    ros::Timer timer;
+    double linear_vel_x;
+    double angular_vel_z;
+    double robot_pose_x;
+    double robot_pose_y;
+};
+
+int main(int argc, char** argv) {
+    // Initialize ROS
+    ros::init(argc, argv, "robot_controller");
+
+    // Create an instance of RobotController
+    RobotController robot_controller;
+
+    // Spin ROS
+    ros::spin();
+
+    return 0;
+}
